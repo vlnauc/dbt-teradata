@@ -4,11 +4,11 @@
     {{ log("use_qvci set to : " ~ use_qvci) }}
 
     {%- call statement('catalog', fetch_result=True) -%}
-          with tables as (
+          with _tables_ as (
               {{ teradata__get_catalog_tables_sql(information_schema) }}
               {{ teradata__get_catalog_schemas_where_clause_sql(schemas) }}
           ),
-          columns as (
+          _columns_ as (
               {{ teradata__get_catalog_columns_sql(information_schema) }}
               {{ teradata__get_catalog_schemas_where_clause_sql(schemas) }}
           )
@@ -23,11 +23,11 @@
     {{ log("use_qvci set to : " ~ use_qvci) }}
     
     {%- call statement('catalog', fetch_result=True) -%}
-          with tables as (
+          with _tables_ as (
               {{ teradata__get_catalog_tables_sql(information_schema) }}
               {{ teradata__get_catalog_relations_where_clause_sql(relations) }}
           ),
-          columns as (
+          _columns_ as (
               {{ teradata__get_catalog_columns_sql(information_schema) }}
               {{ teradata__get_catalog_relations_where_clause_sql(relations) }}
           )
@@ -123,29 +123,29 @@
             WHEN column_type = 'TS' THEN 'TIMESTAMP'
             WHEN column_type = 'TZ' THEN 'TIME WITH TIME ZONE'
             WHEN column_type = 'SZ' THEN 'TIMESTAMP WITH TIME ZONE'
-            WHEN column_type = 'UT' THEN 'USER‑DEFINED TYPE'
+            WHEN column_type = 'UT' THEN 'USER-DEFINED TYPE'
             WHEN column_type = 'XM' THEN 'XML'
             ELSE 'N/A'
           END AS column_type,
           column_comment
-        FROM columns
+        FROM _columns_
     ),
     joined AS (
       SELECT
           columns_transformed.table_database,
           columns_transformed.table_schema,
           columns_transformed.table_name,
-          tables.table_type,
+          _tables_.table_type,
           columns_transformed.table_comment,
-          tables.table_owner,
+          _tables_.table_owner,
           columns_transformed.column_name,
           columns_transformed.column_index,
           columns_transformed.column_type,
           columns_transformed.column_comment
-      FROM tables
+      FROM _tables_
       JOIN columns_transformed ON
-        tables.table_schema = columns_transformed.table_schema
-        AND tables.table_name = columns_transformed.table_name
+        _tables_.table_schema = columns_transformed.table_schema
+        AND _tables_.table_name = columns_transformed.table_name
     )
     SELECT *
     FROM joined
